@@ -24,13 +24,13 @@ import java.lang.reflect.Method;
 @Getter
 @Setter
 class ComponentDefinition<T> {
-    private final Class<T>   clazz;
-    private       Creator<T> creator;
-    private final boolean    singleton;
+    private final Class<T> clazz;
+    private final boolean singleton;
     private final boolean lazy;
+    private Creator<T> creator;
     private T instance;
 
-    public ComponentDefinition(Class<T> clazz, Creator<T> creator, boolean singleton, boolean lazy) {
+    public ComponentDefinition(Class<T> clazz, boolean singleton, boolean lazy, Creator<T> creator) {
         this.clazz = clazz;
         this.creator = creator;
         this.singleton = singleton;
@@ -59,21 +59,21 @@ class ComponentDefinition<T> {
     public static <T> ComponentDefinition<T> create(DefaultThemisImpl themis, ComponentDefinition<T> componentDefinition, Method method, boolean singleton, boolean lazy) {
         var creator = new MethodCreator<T>(themis, componentDefinition, method);
         var clazz = (Class<T>) method.getReturnType();
-        return new ComponentDefinition<>(clazz, creator, singleton, lazy);
+        return new ComponentDefinition<>(clazz, singleton, lazy, creator);
     }
 
     public static <T> ComponentDefinition<T> create(DefaultThemisImpl themis, Class<T> clazz, boolean singleton, boolean lazy) {
         ConstructorCreator<T> creator = new ConstructorCreator<>(themis, clazz);
-        return new ComponentDefinition<>(clazz, creator, singleton, lazy);
+        return new ComponentDefinition<>(clazz, singleton, lazy, creator);
     }
 
     public T getInstance() {
         synchronized (this) {
             if (instance == null) {
-                var instance = creator.create();
+                var newInstance = creator.create();
                 if (singleton) {
                     // if it is a singleton then we store the instance and release the creator
-                    this.instance = instance;
+                    this.instance = newInstance;
                     creator = null;
                 }
             }
