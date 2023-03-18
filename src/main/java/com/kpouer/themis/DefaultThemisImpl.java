@@ -107,7 +107,7 @@ public class DefaultThemisImpl implements Themis {
             var resources = DefaultThemisImpl.class.getClassLoader().getResources(relPath);
             var classes = new ArrayList<Class<?>>();
             if (!resources.hasMoreElements()) {
-                throw new RuntimeException(String.format("Unexpected problem: No resource for {%s}", relPath));
+                throw new ComponentIocException("Unexpected problem: No resource for " + relPath);
             } else {
                 do {
                     var resource = resources.nextElement();
@@ -122,7 +122,7 @@ public class DefaultThemisImpl implements Themis {
             }
             return classes;
         } catch (IOException e) {
-            throw new RuntimeException("Unexpected error loading resources", e);
+            throw new ComponentIocException("Unexpected error loading resources", e);
         }
     }
 
@@ -131,7 +131,7 @@ public class DefaultThemisImpl implements Themis {
         // Turn package name to relative path to jar file
         var relPath = packageName.replace('.', '/');
         var resPath = resource.getPath();
-        var jarPath = resPath.replaceFirst("[.]jar[!].*", ".jar").replaceFirst("file:", "");
+        var jarPath = resPath.replaceFirst(".jar!.*", ".jar").replaceFirst("file:", "");
 
         try (var jarFile = new JarFile(jarPath)) {
             // attempt to load jar file
@@ -157,7 +157,7 @@ public class DefaultThemisImpl implements Themis {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(String.format("Unexpected IOException reading JAR File [%s]", jarPath), e);
+            throw new ComponentIocException("Unexpected IOException reading JAR File " + jarPath, e);
         }
         return classes;
     }
@@ -236,7 +236,7 @@ public class DefaultThemisImpl implements Themis {
         return result;
     }
 
-    <T> Object[] getArgs(Class<?>[] parameterTypes) {
+    Object[] getArgs(Class<?>[] parameterTypes) {
         var args = new Object[parameterTypes.length];
         for (var i = 0; i < parameterTypes.length; i++) {
             var parameterType = parameterTypes[i];
