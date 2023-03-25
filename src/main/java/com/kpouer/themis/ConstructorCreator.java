@@ -40,13 +40,13 @@ class ConstructorCreator<T> extends AbstractCreator<T> {
             throw new ComponentIocException(clazz.getName() + " must have only one constructor");
 
         var constructor = constructors[0];
-        var parameterTypes = constructor.getParameterTypes();
+        var parameters = constructor.getParameters();
         try {
             T component;
-            if (parameterTypes.length == 0) {
+            if (parameters.length == 0) {
                 component = constructor.newInstance();
             } else {
-                var args = themis.getArgs(parameterTypes);
+                var args = themis.getArgs(parameters);
                 component = constructor.newInstance(args);
             }
             invokePostConstruct(component);

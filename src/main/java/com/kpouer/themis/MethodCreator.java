@@ -25,7 +25,7 @@ class MethodCreator<T> extends AbstractCreator<T> {
     private final ComponentDefinition<T> componentDefinition;
     private final Method method;
 
-    public MethodCreator(ThemisImpl themis, ComponentDefinition<T> componentDefinition, Method method) {
+    MethodCreator(ThemisImpl themis, ComponentDefinition<T> componentDefinition, Method method) {
         super(themis);
         this.componentDefinition = componentDefinition;
         this.method = method;
@@ -33,14 +33,14 @@ class MethodCreator<T> extends AbstractCreator<T> {
 
     @Override
     public T create() {
-        var parameterTypes = method.getParameterTypes();
+        var parameters = method.getParameters();
         try {
             T instance = componentDefinition.getInstance();
             T component;
-            if (parameterTypes.length == 0) {
+            if (parameters.length == 0) {
                 component = (T) method.invoke(instance);
             } else {
-                component = (T) method.invoke(instance, themis.getArgs(parameterTypes));
+                component = (T) method.invoke(instance, themis.getArgs(parameters));
             }
             invokePostConstruct(component);
             return component;

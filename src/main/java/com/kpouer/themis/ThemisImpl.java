@@ -14,9 +14,11 @@
 package com.kpouer.themis;
 
 import com.kpouer.themis.annotation.Component;
+import com.kpouer.themis.annotation.Qualifier;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Parameter;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -85,15 +87,31 @@ public class ThemisImpl implements Themis {
         return result;
     }
 
-    Object[] getArgs(Class<?>[] parameterTypes) {
-        var args = new Object[parameterTypes.length];
-        for (var i = 0; i < parameterTypes.length; i++) {
-            var parameterType = parameterTypes[i];
+    Object[] getArgs(Parameter[] parameters) {
+        var args = new Object[parameters.length];
+        for (var i = 0; i < parameters.length; i++) {
+            var parameter = parameters[i];
             try {
-                var arg = getComponentOfType(parameterType);
-                args[i] = arg;
+                Class<?> type = parameter.getType();
+                var qualifier = parameter.getAnnotation(Qualifier.class);
+                Object component = null;
+                if (qualifier != null) {
+                    var name = qualifier.value();
+                    if (name.isEmpty()) {
+                        name = parameter.getName();
+                    }
+                    try {
+                        component = getComponentOfType(name, type);
+                    } catch (ComponentIocException e) {
+                        // unable to find a component with the qualifier name
+                    }
+                }
+                if (component == null) {
+                    component = getComponentOfType(type);
+                }
+                args[i] = component;
             } catch (ComponentIocException e) {
-                throw new ComponentIocException("Unable to create component of type " + parameterType, e);
+                throw new ComponentIocException("Unable to create component of type " + parameter, e);
             }
         }
         return args;
