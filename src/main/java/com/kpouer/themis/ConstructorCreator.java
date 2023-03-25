@@ -28,7 +28,7 @@ import java.lang.reflect.InvocationTargetException;
 class ConstructorCreator<T> extends AbstractCreator<T> {
     private final Class<T> clazz;
 
-    ConstructorCreator(DefaultThemisImpl themis, Class<T> clazz) {
+    ConstructorCreator(ThemisImpl themis, Class<T> clazz) {
         super(themis);
         this.clazz = clazz;
     }

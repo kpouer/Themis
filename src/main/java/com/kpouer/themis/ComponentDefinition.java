@@ -56,13 +56,13 @@ class ComponentDefinition<T> {
         return new ComponentDefinition<>(instance);
     }
 
-    public static <T> ComponentDefinition<T> create(DefaultThemisImpl themis, ComponentDefinition<T> componentDefinition, Method method, boolean singleton, boolean lazy) {
+    public static <T> ComponentDefinition<T> create(ThemisImpl themis, ComponentDefinition<T> componentDefinition, Method method, boolean singleton, boolean lazy) {
         var creator = new MethodCreator<T>(themis, componentDefinition, method);
         var clazz = (Class<T>) method.getReturnType();
         return new ComponentDefinition<>(clazz, singleton, lazy, creator);
     }
 
-    public static <T> ComponentDefinition<T> create(DefaultThemisImpl themis, Class<T> clazz, boolean singleton, boolean lazy) {
+    public static <T> ComponentDefinition<T> create(ThemisImpl themis, Class<T> clazz, boolean singleton, boolean lazy) {
         ConstructorCreator<T> creator = new ConstructorCreator<>(themis, clazz);
         return new ComponentDefinition<>(clazz, singleton, lazy, creator);
     }

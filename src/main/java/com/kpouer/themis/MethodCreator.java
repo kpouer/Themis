@@ -25,7 +25,7 @@ class MethodCreator<T> extends AbstractCreator<T> {
     private final ComponentDefinition<T> componentDefinition;
     private final Method method;
 
-    public MethodCreator(DefaultThemisImpl themis, ComponentDefinition<T> componentDefinition, Method method) {
+    public MethodCreator(ThemisImpl themis, ComponentDefinition<T> componentDefinition, Method method) {
         super(themis);
         this.componentDefinition = componentDefinition;
         this.method = method;

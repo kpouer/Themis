@@ -21,7 +21,7 @@ import java.lang.reflect.Method;
 
 @RequiredArgsConstructor
 public abstract class AbstractCreator<T> implements Creator<T> {
-    protected final DefaultThemisImpl themis;
+    protected final ThemisImpl themis;
 
     protected void invokePostConstruct(T component) {
         var methods = component.getClass().getMethods();
