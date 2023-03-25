@@ -76,6 +76,7 @@ class ComponentDefinition<T> {
                     this.instance = newInstance;
                     creator = null;
                 }
+                return newInstance;
             }
         }
         return instance;
