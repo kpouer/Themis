@@ -22,12 +22,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target({ElementType.TYPE, ElementType.METHOD})
+/**
+ * Qualifier annotation to help Themis finding the right component.
+ */
+@Target({ElementType.TYPE, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Component {
+public @interface Qualifier {
     String value() default "";
-
-    boolean singleton() default true;
-
-    boolean lazy() default true;
 }

@@ -1,22 +1,28 @@
 /*
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+The MIT License (MIT)
+Copyright (c) 2023 Matthieu Casanova
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 package com.kpouer.themis;
 
 import com.kpouer.themis.annotation.Component;
+import com.kpouer.themis.annotation.Qualifier;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Parameter;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,7 +33,7 @@ import java.util.jar.JarFile;
  *
  * @author Matthieu Casanova
  */
-public class DefaultThemisImpl implements Themis {
+public class ThemisImpl implements Themis {
     /**
      * The registered components
      * key: the name of the component
@@ -35,9 +41,84 @@ public class DefaultThemisImpl implements Themis {
      */
     private final Map<String, ComponentDefinition<?>> components = new ConcurrentHashMap<>();
 
-    public DefaultThemisImpl(String pkg) {
+    public ThemisImpl(String pkg) {
         registerSingletonInstance(Themis.class.getName(), this);
         loadPackage(pkg);
+    }
+
+    @Override
+    public <T> T getComponentOfType(Class<T> requiredType) throws ComponentIocException {
+        var annotation = requiredType.getAnnotation(Component.class);
+        var name = annotation == null || annotation.value().isEmpty() ? requiredType.getSimpleName() : annotation.value();
+        var definition = components.get(name.toLowerCase());
+        if (definition == null) {
+            for (ComponentDefinition<?> value : components.values()) {
+                if (requiredType.isAssignableFrom(value.getClazz())) {
+                    definition = value;
+                    break;
+                }
+            }
+        }
+        if (definition == null) {
+            throw new ComponentIocException("No bean with type " + requiredType + " is not registered");
+        }
+        return (T) definition.getInstance();
+    }
+
+    @Override
+    public <T> T getComponentOfType(String name, Class<T> requiredType) throws ComponentIocException {
+        ComponentDefinition<?> definition = components.get(name.toLowerCase());
+        if (definition == null) {
+            throw new ComponentIocException("The bean " + name + " is not registered");
+        }
+
+        if (!requiredType.isAssignableFrom(definition.getClazz())) {
+            throw new ComponentIocException("The bean " + name + " is not of type " + requiredType.getName());
+        }
+        return (T) definition.getInstance();
+    }
+
+    @Override
+    public <T> Map<String, T> getComponentsOfType(Class<T> requiredType) throws ComponentIocException {
+        var result = new HashMap<String, T>();
+        for (var entry : components.entrySet()) {
+            ComponentDefinition<?> definition = entry.getValue();
+            if (requiredType.isAssignableFrom(definition.getClazz())) {
+                var instance = (T) definition.getInstance();
+                result.put(entry.getKey(), instance);
+            }
+        }
+        return result;
+    }
+
+    Object[] getArgs(Parameter[] parameters) {
+        var args = new Object[parameters.length];
+        for (var i = 0; i < parameters.length; i++) {
+            var parameter = parameters[i];
+            try {
+                Class<?> type = parameter.getType();
+                var qualifier = parameter.getAnnotation(Qualifier.class);
+                Object component = null;
+                if (qualifier != null) {
+                    var name = qualifier.value();
+                    if (name.isEmpty()) {
+                        name = parameter.getName();
+                    }
+                    try {
+                        component = getComponentOfType(name, type);
+                    } catch (ComponentIocException e) {
+                        // unable to find a component with the qualifier name
+                    }
+                }
+                if (component == null) {
+                    component = getComponentOfType(type);
+                }
+                args[i] = component;
+            } catch (ComponentIocException e) {
+                throw new ComponentIocException("Unable to create component of type " + parameter, e);
+            }
+        }
+        return args;
     }
 
     /**
@@ -104,7 +185,7 @@ public class DefaultThemisImpl implements Themis {
         // Get a File object for the package
         try {
             var relPath = packageName.replace('.', '/');
-            var resources = DefaultThemisImpl.class.getClassLoader().getResources(relPath);
+            var resources = ThemisImpl.class.getClassLoader().getResources(relPath);
             var classes = new ArrayList<Class<?>>();
             if (!resources.hasMoreElements()) {
                 throw new ComponentIocException("Unexpected problem: No resource for " + relPath);
@@ -189,64 +270,5 @@ public class DefaultThemisImpl implements Themis {
         } catch (ClassNotFoundException e) {
             throw new ComponentIocException(String.format("Unexpected ClassNotFoundException loading class [%s]", cls), e);
         }
-    }
-
-    @Override
-    public <T> T getComponentOfType(Class<T> requiredType) throws ComponentIocException {
-        var annotation = requiredType.getAnnotation(Component.class);
-        var name = annotation == null || annotation.value().isEmpty() ? requiredType.getSimpleName() : annotation.value();
-        var definition = components.get(name.toLowerCase());
-        if (definition == null) {
-            for (ComponentDefinition<?> value : components.values()) {
-                if (requiredType.isAssignableFrom(value.getClazz())) {
-                    definition = value;
-                    break;
-                }
-            }
-        }
-        if (definition == null) {
-            throw new ComponentIocException("No bean with type " + requiredType + " is not registered");
-        }
-        return (T) definition.getInstance();
-    }
-
-    @Override
-    public <T> T getComponentOfType(String name, Class<T> requiredType) throws ComponentIocException {
-        ComponentDefinition<?> definition = components.get(name.toLowerCase());
-        if (definition == null) {
-            throw new ComponentIocException("The bean " + name + " is not registered");
-        }
-
-        if (!requiredType.isAssignableFrom(definition.getClazz())) {
-            throw new ComponentIocException("The bean " + name + " is not of type " + requiredType.getName());
-        }
-        return (T) definition.getInstance();
-    }
-
-    @Override
-    public <T> Map<String, T> getComponentsOfType(Class<T> requiredType) throws ComponentIocException {
-        var result = new HashMap<String, T>();
-        for (var entry : components.entrySet()) {
-            ComponentDefinition<?> definition = entry.getValue();
-            if (requiredType.isAssignableFrom(definition.getClazz())) {
-                var instance = (T) definition.getInstance();
-                result.put(entry.getKey(), instance);
-            }
-        }
-        return result;
-    }
-
-    Object[] getArgs(Class<?>[] parameterTypes) {
-        var args = new Object[parameterTypes.length];
-        for (var i = 0; i < parameterTypes.length; i++) {
-            var parameterType = parameterTypes[i];
-            try {
-                var arg = getComponentOfType(parameterType);
-                args[i] = arg;
-            } catch (ComponentIocException e) {
-                throw new ComponentIocException("Unable to create component of type " + parameterType, e);
-            }
-        }
-        return args;
     }
 }
