@@ -13,6 +13,8 @@
  */
 package com.kpouer.themis;
 
+import lombok.ToString;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
@@ -22,10 +24,11 @@ import java.lang.reflect.InvocationTargetException;
  *
  * @param <T>
  */
+@ToString
 class ConstructorCreator<T> extends AbstractCreator<T> {
-    protected final Class<T> clazz;
+    private final Class<T> clazz;
 
-    public ConstructorCreator(DefaultThemisImpl themis, Class<T> clazz) {
+    ConstructorCreator(DefaultThemisImpl themis, Class<T> clazz) {
         super(themis);
         this.clazz = clazz;
     }
