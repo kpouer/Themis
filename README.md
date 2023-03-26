@@ -1,4 +1,7 @@
 # Themis
+![Java CI with Maven](https://github.com/kpouer/WKTParser/workflows/Java%20CI%20with%20Maven/badge.svg)
+![CodeQL](https://github.com/kpouer/WKTParser/workflows/CodeQL/badge.svg)
+[![Maven Central](https://img.shields.io/maven-central/v/com.kpouer/themis)](https://central.sonatype.com/artifact/com.kpouer/wktparser/1.1.1/versions)
 
 ## Introduction
 
