@@ -17,9 +17,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 */
 package com.kpouer.themis;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 
-import javax.annotation.PostConstruct;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
