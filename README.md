@@ -9,6 +9,18 @@ It is a lightweight inversion of control container framework written in Java.
 It is freely inspired by the Spring framework in a much smaller and simpler version.
 Written for fun and learning purposes but might be used in any project you want.
 
+## Dependency
+
+Available through Maven central
+
+```xml
+<dependency>
+  <groupId>com.kpouer</groupId>
+  <artifactId>themis</artifactId>
+  <version>1.0.0</version>
+</dependency>
+```
+
 ## Features
 
 It comes with two annotations : `@Component` and `@Qualifier`.
