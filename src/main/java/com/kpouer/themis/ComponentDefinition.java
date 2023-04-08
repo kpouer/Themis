@@ -85,4 +85,9 @@ class ComponentDefinition<T> {
         }
         return instance;
     }
+
+    @Override
+    public String toString() {
+        return "ComponentDefinition{clazz=" + clazz + ", singleton=" + singleton + ", lazy=" + lazy + '}';
+    }
 }

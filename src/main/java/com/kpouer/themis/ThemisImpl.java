@@ -40,10 +40,34 @@ public class ThemisImpl implements Themis {
      * value: the component definition.
      */
     private final Map<String, ComponentDefinition<?>> components = new ConcurrentHashMap<>();
+    private List<ComponentDefinition<?>> pendingInitialization;
 
     public ThemisImpl(String pkg) {
+        pendingInitialization = new ArrayList<>();
         registerSingletonInstance(Themis.class.getName(), this);
         loadPackage(pkg);
+        initPendingComponents();
+        pendingInitialization = null;
+    }
+
+    private void initPendingComponents() {
+        while (!pendingInitialization.isEmpty()) {
+            var iterator = pendingInitialization.iterator();
+            boolean hasChanged = false;
+            while (iterator.hasNext()) {
+                var componentDefinition = iterator.next();
+                try {
+                    componentDefinition.getInstance();
+                    iterator.remove();
+                    hasChanged = true;
+                } catch (ComponentIocException ignored) {
+                    // the component is not ready yet
+                }
+            }
+            if (!hasChanged) {
+                throw new ComponentIocException("There is a circular dependency + " + pendingInitialization);
+            }
+        }
     }
 
     @Override
@@ -138,7 +162,16 @@ public class ThemisImpl implements Themis {
             throw new ComponentIocException("The component " + name + " is already registered");
         }
         if (!componentDefinition.isLazy()) {
-            componentDefinition.getInstance();
+            try {
+                componentDefinition.getInstance();
+            } catch (ComponentIocException e) {
+                if (e.getCause() != null) {
+                    // there is an external cause, we will throw it
+                    throw e;
+                }
+                // unable to create the instance now, we will try later
+                pendingInitialization.add(componentDefinition);
+            }
         }
         initMethodComponents(componentDefinition);
     }

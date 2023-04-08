@@ -6,7 +6,7 @@
 
     <groupId>com.kpouer</groupId>
     <artifactId>themis</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <name>Themis</name>
     <description>Themis is a light IOC framework</description>
     <url>https://github.com/kpouer/Hermes</url>
