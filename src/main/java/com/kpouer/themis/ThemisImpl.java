@@ -165,7 +165,7 @@ public class ThemisImpl implements Themis {
             try {
                 componentDefinition.getInstance();
             } catch (ComponentIocException e) {
-                if (e.getCause() != null) {
+                if (e.getCause() != null && !(e.getCause() instanceof ComponentIocException)) {
                     // there is an external cause, we will throw it
                     throw e;
                 }
